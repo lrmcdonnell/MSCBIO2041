@@ -1,0 +1,103 @@
+\documentclass{exam}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{mathtools}
+
+\begin{document}
+{\LARGE\bf CSM2024: Homework 4}
+\vspace{10mm}
+
+\begin{questions}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%% QUESTION 1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\question 
+\textbf{Simulating the dynamics of a stochastic system}  
+
+Suppose that we’re interesting modeling the stochastic dynamics of an mRNA (M) as it is synthesized and degraded.  We’ll specify the birth/death process describing the system as follows:  
+$$M \xrightarrow{\lambda_1} M +1$$    
+$$M \xrightarrow{\beta_1M} M - 1$$
+ 
+Write an implementation of the Gillespie algorithm to stimulate this process with $\lambda_1= 10$ and $\beta_1 = 1$. Present the following results for your simulation:  
+ \begin{parts}
+\part	A plot of a simulated trajectory from t = 0 to t = 100 time units. Hint: Remember when plotting that jumps are instantaneous; the M can never take on non-integer values.  
+\part	Determine the mean and variance of the process from your simulation. Hint 1: Remember our discussion in class! Naively averaging the series of M values from your simulation will give you the wrong answer! Your approach must account for the amount of time spent in each state.  
+Hint 2: To get accurate answers, make sure your simulations run for many mRNA lifetimes or run many replicate simulations.  
+\part Revisit your simulations from (b) and identify every instance where the system resides in the state M = 5. Plot a histogram of the waiting times (i.e. the duration of each visit to the state). Generate the same plot for all visits to the state M = 15.  
+\begin{enumerate}
+    \item What type of distributions are these? 
+    \item In what way do they differ from one another?
+    \item What is the reason for this difference?
+    \\
+\end{enumerate}
+\end{parts}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%% QUESTION 2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\question
+\textbf{Modeling multi-step reactions}
+ 
+In this problem and the next one, we’ll examine some of the assumptions we’ve been making in our models.  
+ 
+So far, we’ve been modeling all birth events as single elementary steps with exponentially distributed waiting times between events. However, many events that we might want to model are not so simple, and instead result from the accumulation of progressive steps. The time it takes to complete a given synthesis event is therefore more likely to reflect the sum of several independent exponential steps instead of a simple memoryless (i.e. exponentially distributed) waiting time. Transcriptional elongation of mRNA is a great example. It’s not a single chemical step that we might model as in problem 1, but rather a series of such steps, each of which adds a base to the growing chain.  
+ 
+Let’s explore what happens when we model these intermediate steps explicitly. We’ll examine a simplified model of mRNA elongation. Imagine that we have an elongating mRNA chain of final length 3. $M_i$ refers to the copy number of the species with length $i$.  We’ll assume that only the fully elongated species can be degraded. We can sketch out our elongation process like this:  
+ 
+	$$\emptyset \xrightarrow{\lambda_1} M_1 \xrightarrow{\lambda_1} M_2 \xrightarrow{\lambda_1} M_3 \xrightarrow{\beta_1M_3} \emptyset $$
+  
+ 
+And we can write out the corresponding birth-death process as follows:  
+$$(M_1, M_2, M_3) \xrightarrow{\lambda_1} (M_1 +1,M_2,M_3)$$
+$$(M_1, M_2, M_3) \xrightarrow{\lambda_1M_1} (M_1 - 1,M_2 + 1,M_3)$$
+$$(M_1, M_2, M_3) \xrightarrow{\lambda_1M_2} (M_1,M_2 - 1,M_3 + 1)$$
+$$(M_1, M_2, M_3) \xrightarrow{\beta_1M_3} (M_1,M_2,M_3 - 1)$$
+ 
+Write a Gillespie simulation of this process with the same parameter values as in the previous problem (i.e. with $\lambda_1= 10$ and $\beta_1 = 1$) and answer the following:  
+\begin{parts}
+    
+
+\part	First a conceptual question: why—in molecular terms— do we simultaneously add one copy of a species and remove one of another in the middle reactions?  
+ 
+\part	Report the mean and variance for the fully elongated species, $M_3$. Is the variance larger, smaller or equal to what you saw in problem 1b?  
+ 
+\part	Compile the distribution of waiting time between successive $M_3$ synthesis events from your simulations. Plot the histogram of waiting times. What kind of distribution does this appear to be? Does the result surprise you? Why or why not? 
+ 
+HINT: This is a question about timing between synthesis events specifically, not between any event that changes $M_3$. 
+ 
+\part	Given your results from 2b and 2c, how do you feel about modeling mRNA transcription as a single elementary event? Does it appear to be a reasonable or unreasonable approximation? 
+\\
+
+\end{parts}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%% QUESTION 3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\question	\textbf{Modeling bursty production}
+ 
+Most of the chemical reactions we’ve modeled so far have step sizes of one; that is, they add or remove molecules from the system one at a time. Recent work has suggested that many biomolecules are instead synthesized in large ‘bursts’ where many molecules appear nearly simultaneously. A well-studied example of this is mRNA transcription.  Many genes—in systems ranging from bacteria to humans— appear to have through ‘hot’ and ‘cold’ periods of transcription. They’ll go through long periods of transcriptional inactivity punctuated by short, intense transcriptional bursts in which many mRNAs are produced.  
+ 
+We could model this process microscopically— taking account of distinct promoter states, RNA polymerase binding, transcriptional elongation, etc.— but we can distill some useful intuition from a much simpler model. Consider the following simplified model of bursty transcription:  
+$$M \xrightarrow{\lambda_1} M + b$$   
+$$M \xrightarrow{\beta_1M} M - 1$$
+ 
+The only modification from the system in problem 1 is a step size of $b$ molecules in the synthesis reaction. The burst size, $b$, is simply an integer $\ge 1 $.  
+ 
+Write a Gillespie simulation of this process and answer the following questions.  
+\begin{parts}
+\part	Run a series of simulations for different combinations of $b$ and $\lambda_1$. Specifically, try the following: 
+\begin{itemize}
+    \item $b = 1, \lambda_1 = \{1,5,10,20,50\} $
+    \item $b = 5, \lambda_1 = \{1,5,10,20,50\}$ 
+    \item $b = 10,\lambda_1 = \{1,5, 10,20,50\} $
+\end{itemize}
+ 
+For each set of simulations, plot the measured average $M$ on the x-axis against the normalized variance $\left( \frac{\sigma_M^2}{<M>^2}\right)$  on the y-axis. On your plot, you’ll have 3 distinct curves that illustrate the relationship between mean and variability one for each series of simulations. Present your plot and label each curve.  
+
+ \part	How does the normalized variance change as the mean increases in each simulation set? Can you provide an intuitive explanation for this relationship?  
+ 
+\part	How does increasing the burst size affect the observed variability (as measured by the normalized variance)? That is, for a given average $M$ does increasing the burst size lead to an increase, decrease or no change in the normalized variance? Can you provide an intuitive explanation for this trend?  
+ 
+\part	If you were ‘designing’ a gene to have the lowest possible noise in $M$, how would you select $b$ and $\lambda_1$? 
+\end{parts}
+\end{questions}
+
+
+\end{document}
